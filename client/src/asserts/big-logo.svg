@@ -1,0 +1,36 @@
+<svg width="800" height="220" viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SHUKUMA logo">
+  <defs>
+    <style>
+      .word { font-family: "Montserrat", "Poppins", Arial, sans-serif; font-weight: 800; letter-spacing: 2px; }
+    </style>
+  </defs>
+
+  <!-- Background is transparent by default -->
+
+  <!-- Stylized S -->
+  <g transform="translate(60,40)">
+    <!-- Yellow accent dot above the S -->
+    <circle cx="60" cy="8" r="10" fill="#FFC500" />
+
+    <!-- Cursive-like S path (adjust stroke-width or path for fine tuning) -->
+    <path d="
+      M 120,40
+      C 80,8 28,18 32,52
+      C 36,82 78,84 96,94
+      C 122,108 118,134 92,146
+      C 60,162 20,152 20,128
+      C 20,110 40,102 56,100
+      C 70,98 84,96 92,90
+      C 106,80 100,64 84,58
+      C 66,50 44,52 32,64
+      " fill="none" stroke="#111111" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Wordmark: HUKUMA -->
+  <g transform="translate(220,150)">
+    <!-- HUK in black -->
+    <text class="word" x="0" y="0" font-size="120" fill="#111111">HUK</text>
+    <!-- UMA in yellow -->
+    <text class="word" x="320" y="0" font-size="120" fill="#FFC500">UMA</text>
+  </g>
+</svg>

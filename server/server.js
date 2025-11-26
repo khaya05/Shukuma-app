@@ -1,0 +1,124 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+import { Server } from 'socket.io';
+import http from 'http';
+import morgan from 'morgan';
+import express from 'express';
+import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+const app = express();
+
+import userRouter from './routes/userRouter.js';
+import authRouter from './routes/authRouter.js';
+import errorHandlerMiddleware from './middleware/errorHandlerMiddleware.js';
+import { authenticateUser } from './middleware/authMiddleware.js';
+import { BadRequestError, UnauthenticatedError } from './errors/customErrors.js';
+import { verifyJWT } from './util/tokenUtils.js';
+
+// middleware
+app.use(express.json());
+app.use(cookieParser());
+
+const port = process.env.PORT || 5100;
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: 'https://footprint-logger-03-frontend.onrender.com',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    credentials: true,
+  },
+});
+
+io.use((socket, next) => {
+  try {
+    const cookies = socket.handshake.headers.cookie
+    if (!cookies) next(new BadRequestError('No cookies found'))
+
+    const req = {
+      headers: {
+        cookie: cookies
+      }
+    }
+    const parsedCookies = {}
+    cookieParser()(
+      { headers: { cookie: cookies } },
+      { cookie: (name, value) => parsedCookies[name] = value },
+      () => { }
+    );
+
+    const token = req.cookies?.token || parsedCookies.token
+
+    if (!token) next(new UnauthenticatedError('no token found'))
+
+    const decoded = verifyJWT(token)
+    socket.userId = decoded.userId
+    next()
+  } catch (err) {
+    console.error("Socket authentication error:", err);
+    next(new Error("Authentication error"));
+  }
+})
+
+io.on('connection', (socket) => {
+  console.log('User connected', socket.id);
+
+  socket.join(socket.userId);
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected', socket.id);
+  });
+});
+
+app.set('io', io);
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// CORS
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://footprint-logger-03-frontend.onrender.com'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// routes
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', authenticateUser, userRouter);
+
+app.use('*', (req, res) => {
+  res.status(404).json({ msg: 'Route not found' });
+});
+
+// error handler
+app.use(errorHandlerMiddleware);
+
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+}
+
+try {
+  await mongoose.connect(process.env.MONGO_URL);
+  server.listen(port, () => {
+    console.log(`App running on port ${port}`);
+  });
+} catch (error) {
+  console.error(error);
+  process.exit(1);
+}
