@@ -1,7 +1,23 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Dashboard, HomeLayout, Landing, Login, Register } from './pages';
+import {
+  Achievements,
+  Dashboard,
+  DashboardLayout,
+  Help,
+  History,
+  HomeLayout,
+  Landing,
+  Login,
+  Preferences,
+  Register,
+  Workouts,
+} from './pages';
 import { LoginAction } from './pages/Login';
 import { registerAction } from './pages/Register';
+import { Provider } from 'react-redux';
+import { store } from './store';
+import { ToastServiceConnector } from './components/Toast/ToastServiceConnector';
+import ToastContainer from './components/Toast/ToastContainer';
 
 const router = createBrowserRouter([
   {
@@ -24,7 +40,33 @@ const router = createBrowserRouter([
       },
       {
         path: 'dashboard',
-        element: <Dashboard />,
+        element: <DashboardLayout />,
+        children: [
+          {
+            index: true,
+            element: <Dashboard />,
+          },
+          {
+            path: 'workouts',
+            element: <Workouts />,
+          },
+          {
+            path: 'history',
+            element: <History />,
+          },
+          {
+            path: 'achievements',
+            element: <Achievements />,
+          },
+          {
+            path: 'preferences',
+            element: <Preferences />,
+          },
+          {
+            path: 'help',
+            element: <Help />,
+          },
+        ],
       },
     ],
   },
@@ -32,9 +74,11 @@ const router = createBrowserRouter([
 
 const App = () => {
   return (
-    <>
+    <Provider store={store}>
+      <ToastServiceConnector />
       <RouterProvider router={router} />
-    </>
+      <ToastContainer />
+    </Provider>
   );
 };
 
