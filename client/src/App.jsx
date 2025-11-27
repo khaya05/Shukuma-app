@@ -18,6 +18,7 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import { ToastServiceConnector } from './components/Toast/ToastServiceConnector';
 import ToastContainer from './components/Toast/ToastContainer';
+import { dashboardLoader } from './pages/DashboardLayout';
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <DashboardLayout />,
+        loader: dashboardLoader,
         children: [
           {
             index: true,

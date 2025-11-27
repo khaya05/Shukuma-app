@@ -1,3 +1,35 @@
-export { default as Logo } from './Logo/Logo'
-export { default as CustomLink } from './Buttons/CustomLink.jsx'
-export {default as FormInputElement} from './Form/FormInputElement.jsx'
+export { default as BigNavbar } from './Navbar/BigNavbar';
+export { default as BigSidebar } from './Sidebar/BigSidebar';
+export { default as CustomLink } from './Buttons/CustomLink';
+export { default as FormInputElement } from './Form/FormInputElement';
+export { default as Logo } from './Logo/Logo';
+export { default as SidebarPages } from './Sidebar/SidebarPages';
+export { default as SmallNavbar } from './Navbar/SmallNavbar';
+export { default as BigSidebarBtn } from './Buttons/BigSidebarBtn';
+export { default as LogoutBtn } from './Buttons/LogoutBtn';
+export { default as SmallSidebar } from './Sidebar/SmallSidebar';
+export { default as Modal } from './Modal/Modal';
+export { default as WorkoutCard } from './Cards/WorkoutCard'
+
+
+// export { default as Card } from './Dashboard/Card';
+// export { default as RecentActivities } from './Dashboard/RecentActivities';
+// export { default as CardContent } from './Dashboard/CardContent';
+// export { default as LeaderBoard } from './Dashboard/LeaderBoard';
+// export { default as SummaryCard } from './Dashboard/SummaryCard';
+// export { default as GoalSuggestions } from './Dashboard/GoalSuggestions';
+// export { default as WeeklyInsights } from './Dashboard/WeeklyInsights';
+// export { default as ActiveGoal } from './Dashboard/ActiveGoal.jsx';
+// export { default as StatItem } from './Dashboard/StatItem.jsx';
+// export { default as CategoryItem } from './Dashboard/CategoryItem.jsx';
+// export { default as Section } from './Dashboard/Section.jsx';
+// export { default as LogProgress } from './Dashboard/LogProgress.jsx';
+// export { default as PersonalizedTips } from './Dashboard/PersonalizedTips';
+// export { default as DeleteConfirmation } from './Modal/DeleteConfirmation';
+// export { default as FormSelectElement } from './Form/FormSelectElement';
+// export { default as Hero } from './Hero/Hero';
+// export { default as NoActivities } from './Activity/NoActivities.jsx';
+// export { default as ProfileBtn } from './Buttons/ProfileBtn';
+// export { default as SearchActivity } from './Activity/SearchActivity';
+// export { default as SmallLogo } from './Logo/SmallLogo';
+// export { default as SubmitBtn } from './Buttons/SubmitBtn';

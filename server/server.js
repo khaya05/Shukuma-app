@@ -12,6 +12,8 @@ const app = express();
 
 import userRouter from './routes/userRouter.js';
 import authRouter from './routes/authRouter.js';
+import exerciseRoutes from './routes/exerciseRoutes.js';
+import workoutRoutes from './routes/workoutRoutes.js';
 import errorHandlerMiddleware from './middleware/errorHandlerMiddleware.js';
 import { authenticateUser } from './middleware/authMiddleware.js';
 import { BadRequestError, UnauthenticatedError } from './errors/customErrors.js';
@@ -82,7 +84,7 @@ app.use((req, res, next) => {
 // CORS
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://footprint-logger-03-frontend.onrender.com'
+  // 'https://footprint-logger-03-frontend.onrender.com'
 ];
 
 app.use(cors({
@@ -100,7 +102,9 @@ app.use(cors({
 
 // routes
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/exercises', exerciseRoutes);
 app.use('/api/v1/users', authenticateUser, userRouter);
+app.use('/api/v1/workouts', authenticateUser, workoutRoutes);
 
 app.use('*', (req, res) => {
   res.status(404).json({ msg: 'Route not found' });
