@@ -1,0 +1,88 @@
+/* eslint-disable react-refresh/only-export-components */
+import { Logo, FormInputElement } from '../components';
+import customFetch from '../util/customFetch';
+import { redirect, useNavigation, Form, Link } from 'react-router-dom';
+import { toastService } from '../util/toastUtil';
+
+export const registerAction = async ({ request }) => {
+  const formData = await request.formData();
+  const data = Object.fromEntries(formData);
+  const { password, passwordConfirm } = data;
+
+  if (password !== passwordConfirm) {
+    return toastService.error("Passwords don't match");
+  }
+
+  try {
+    const response = await customFetch.post('/auth/register', data);
+    localStorage.setItem('token', response.data.token);
+
+    toastService.success('Registration successful! Please login');
+    return redirect('/login');
+  } catch (error) {
+    toastService.error(error?.response?.data?.msg || 'Registration failed.');
+    return { error: error?.response?.data?.msg };
+  }
+};
+
+const Register = () => {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === 'submitting';
+
+  return (
+    <div className='grid place-items-center h-[100vh]'>
+      <div className='form-wrapper'>
+        <Logo />
+        <h2>Register</h2>
+        <Form method='post' className='w-full'>
+          <FormInputElement
+            name='name'
+            placeholder='e.g Tommy'
+            defaultValue='Tony'
+            required
+          />
+          <FormInputElement
+            name='lastName'
+            label='last name'
+            placeholder='e.g smith'
+            defaultValue='Smith'
+            required
+          />
+          <FormInputElement
+            name='email'
+            placeholder='e.g tommy@email.com'
+            defaultValue='tony@email.com'
+            required
+          />
+          <FormInputElement
+            name='password'
+            type='password'
+            placeholder='password'
+            defaultValue='pass1234'
+            required
+          />
+          <FormInputElement
+            name='passwordConfirm'
+            label='confirm password'
+            type='password'
+            placeholder='confirm password'
+            defaultValue='pass1234'
+            required
+          />
+          <button type='submit' className='yellow-btn' disabled={isSubmitting}>
+            {isSubmitting ? 'submitting' : 'submit'}
+          </button>
+        </Form>
+
+        <p className='text-sm'>
+          Already a member?{' '}
+          <Link to='/login' className='text-yellow-500 hover:text-yellow-600'>
+            Login
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
