@@ -10,6 +10,7 @@ export { default as LogoutBtn } from './Buttons/LogoutBtn';
 export { default as SmallSidebar } from './Sidebar/SmallSidebar';
 export { default as Modal } from './Modal/Modal';
 export { default as WorkoutCard } from './Cards/WorkoutCard'
+export { default as GoogleSignInButton } from './Buttons/GoogleSignInButton'
 
 
 // export { default as Card } from './Dashboard/Card';

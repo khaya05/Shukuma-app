@@ -10,6 +10,7 @@ import {
   Login,
   Preferences,
   Register,
+  VerifyEmail,
   Workouts,
 } from './pages';
 import { LoginAction } from './pages/Login';
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
         path: 'register',
         element: <Register />,
         action: registerAction,
+      },
+      {
+        path: 'verify-email',
+        element: <VerifyEmail />,
       },
       {
         path: 'dashboard',

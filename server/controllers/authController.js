@@ -1,17 +1,34 @@
 import { asyncWrapper } from '../util/asyncWrapper.js';
 import User from '../models/userModel.js';
 import { StatusCodes } from 'http-status-codes';
-import { comparePassword, hashPassword } from '../util/passwordUtil.js';
+import {
+  comparePassword,
+  generateVerificationCode,
+  hashPassword,
+} from '../util/passwordUtil.js';
 import { UnauthenticatedError } from '../errors/customErrors.js';
 import { createToken } from '../util/tokenUtils.js';
+import { sendVerificationEmail } from '../services/emailService.js';
 
 export const register = asyncWrapper(async (req, res) => {
   const hashedPassword = await hashPassword(req.body.password);
+  const verificationCode = generateVerificationCode();
+  const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
   req.body.password = hashedPassword;
-  const user = await User.create(req.body);
+  const user = await User.create({
+    ...req.body,
+    verificationCode,
+    verificationCodeExpires,
+    authProvider: 'email',
+  });
 
-  const token = createToken({ userId: user._id, role: user.role });
+  try {
+    await sendVerificationEmail(email, verificationCode);
+  } catch (error) {
+    console.error('Failed to send verification email', error);
+  }
 
+  const token = createToken({ userId: user._id });
   const oneDay = 1000 * 60 * 60 * 24;
   res.cookie('token', token, {
     httpOnly: true,
@@ -21,8 +38,107 @@ export const register = asyncWrapper(async (req, res) => {
   });
 
   res.status(StatusCodes.CREATED).json({
-    user,
-    token
+    message: 'Registration successful. Check your email for verification code.',
+    token,
+    user: {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    },
+  });
+});
+
+export const verifyEmail = asyncWrapper(async (req, res) => {
+  const { email, body } = req.body;
+
+  if (!email || !code) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: 'Email and verification code are required' });
+  }
+
+  const user = await User.findOne({ email }).select(
+    '+verificationCode +verificationCodeExpires'
+  );
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: 'User not found' });
+  }
+
+  if (user.emailVerified) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: 'Email already verified.' });
+  }
+
+  if (user.verificationCodeExpires < new Date()) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: 'Verification code has expired' });
+  }
+
+  if (user.verificationCode !== code) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: 'invalid verification code' });
+  }
+
+  user.emailVerified = true;
+  user.verificationCode = undefined;
+  user.verificationCodeExpires = undefined;
+
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Email verified successfully',
+    user: {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    },
+  });
+});
+
+export const resendVerificationCode = asyncWrapper(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: 'Email is required' });
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: 'User not found' });
+  }
+
+  if (user.emailVerified) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ msg: 'Email is already verified' });
+  }
+
+  const verificationCode = generateVerificationCode();
+  const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+  user.verificationCode = verificationCode;
+  user.verificationCodeExpires = verificationCodeExpires;
+  await user.save();
+
+  try {
+    await sendVerificationEmail(email, verificationCode);
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Verification code sent to your email',
   });
 });
 
@@ -33,6 +149,14 @@ export const login = asyncWrapper(async (req, res, next) => {
   const isValidUser = user && (await comparePassword(password, user.password));
 
   if (!isValidUser) throw new UnauthenticatedError('invalid credentials');
+
+  if (!user.emailVerified) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      message: 'Please verify your email first',
+      requiresVerification: true,
+      email: user.email,
+    });
+  }
 
   const token = createToken({ userId: user._id, role: user.role });
 
@@ -51,8 +175,48 @@ export const login = asyncWrapper(async (req, res, next) => {
       userId: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      emailVerified: user.emailVerified,
+    },
+  });
+});
+
+export const googleAuth = asyncWrapper(async (req, res) => {
+  const { googleId, name, email } = req.body;
+
+  if (!googleId || !email || !name) {
+    return res.status(400).json({ message: 'Missing required Google data' });
+  }
+
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+  if (user) {
+    if (!user.googleId) {
+      user.googleId = googleId;
+      await user.save();
     }
+  } else {
+    user = new User({
+      name,
+      email,
+      googleId,
+      emailVerified: true,
+      authProvider: 'google',
+    });
+    await user.save();
+  }
+  const token = createToken({ userId: user._id, role: user.role });
+  res.status(200).json({
+    success: true,
+    message: 'Google authentication successful',
+    token,
+    user: {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      emailVerified: user.emailVerified,
+    },
   });
 });
 

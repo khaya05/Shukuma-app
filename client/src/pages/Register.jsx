@@ -1,7 +1,7 @@
-/* eslint-disable react-refresh/only-export-components */
+import { useNavigate, Form, redirect } from 'react-router-dom';
 import { Logo, FormInputElement } from '../components';
+import { GoogleSignInButton } from '../components';
 import customFetch from '../util/customFetch';
-import { redirect, useNavigation, Form, Link } from 'react-router-dom';
 import { toastService } from '../util/toastUtil';
 
 export const registerAction = async ({ request }) => {
@@ -10,55 +10,53 @@ export const registerAction = async ({ request }) => {
   const { password, passwordConfirm } = data;
 
   if (password !== passwordConfirm) {
-    return toastService.error("Passwords don't match");
+    toastService.error("Passwords don't match");
+    return null;
   }
 
   try {
-    const response = await customFetch.post('/auth/register', data);
+    const response = await customFetch.post('/api/v1/auth/register', data);
     localStorage.setItem('token', response.data.token);
-
-    toastService.success('Registration successful! Please login');
-    return redirect('/login');
+    toastService.success(
+      'Registration successful! Check your email for verification code.'
+    );
+    return redirect('/verify-email');
   } catch (error) {
-    toastService.error(error?.response?.data?.msg || 'Registration failed.');
-    return { error: error?.response?.data?.msg };
+    toastService.error(
+      error?.response?.data?.message || 'Registration failed.'
+    );
+    return null;
   }
 };
 
 const Register = () => {
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === 'submitting';
+  const navigate = useNavigate();
+
+  const handleGoogleSuccess = (data) => {
+    navigate('/dashboard');
+  };
+
+  const handleGoogleError = (error) => {
+    console.error('Google auth error:', error);
+  };
 
   return (
     <div className='grid place-items-center h-[100vh]'>
       <div className='form-wrapper'>
         <Logo />
-        <h2>Register</h2>
+        <h2>Sign Up</h2>
+
         <Form method='post' className='w-full'>
-          <FormInputElement
-            name='name'
-            placeholder='e.g Tommy'
-            defaultValue='Tony'
-            required
-          />
-          <FormInputElement
-            name='lastName'
-            label='last name'
-            placeholder='e.g smith'
-            defaultValue='Smith'
-            required
-          />
+          <FormInputElement name='name' placeholder='e.g John Doe' required />
           <FormInputElement
             name='email'
-            placeholder='e.g tommy@email.com'
-            defaultValue='tony@email.com'
+            placeholder='e.g john@email.com'
             required
           />
           <FormInputElement
             name='password'
             type='password'
             placeholder='password'
-            defaultValue='pass1234'
             required
           />
           <FormInputElement
@@ -66,19 +64,32 @@ const Register = () => {
             label='confirm password'
             type='password'
             placeholder='confirm password'
-            defaultValue='pass1234'
             required
           />
-          <button type='submit' className='yellow-btn' disabled={isSubmitting}>
-            {isSubmitting ? 'submitting' : 'submit'}
+          <button type='submit' className='yellow-btn w-full'>
+            Sign Up
           </button>
         </Form>
 
-        <p className='text-sm'>
-          Already a member?{' '}
-          <Link to='/login' className='text-yellow-500 hover:text-yellow-600'>
+        <div className='my-4 flex items-center gap-2'>
+          <div className='flex-1 h-px bg-gray-300'></div>
+          <span className='text-gray-600 text-sm'>or</span>
+          <div className='flex-1 h-px bg-gray-300'></div>
+        </div>
+
+        <div className='flex justify-center'>
+          <GoogleSignInButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            action='signup'
+          />
+        </div>
+
+        <p className='text-sm mt-4'>
+          Already have an account?{' '}
+          <a href='/login' className='text-yellow-500 hover:text-yellow-600'>
             Login
-          </Link>
+          </a>
         </p>
       </div>
     </div>

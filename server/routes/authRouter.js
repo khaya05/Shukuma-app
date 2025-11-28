@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { login, logout, register } from '../controllers/authController.js';
+import {
+  googleAuth,
+  login,
+  logout,
+  register,
+  resendVerificationCode,
+  verifyEmail,
+} from '../controllers/authController.js';
 import {
   validateLoginUser,
   validateRegisterUser,
@@ -9,6 +16,9 @@ const router = Router();
 
 router.post('/login', validateLoginUser, login);
 router.post('/register', validateRegisterUser, register);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerificationCode);
+router.post('/google', googleAuth);
 router.get('/logout', logout);
 
 export default router;

@@ -10,3 +10,7 @@ export const comparePassword = async (password, hashedPassword) => {
   const isMatch = await bcrypt.compare(password, hashedPassword)
   return isMatch;
 }
+
+export const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
