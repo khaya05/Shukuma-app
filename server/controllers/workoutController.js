@@ -1,6 +1,6 @@
 import Workout from '../models/workoutModel.js';
-import Exercise from '../models/exerciseModel.js'
-import mongoose from 'mongoose'
+import Exercise from '../models/exerciseModel.js';
+import mongoose from 'mongoose';
 
 export const logWorkout = async (req, res) => {
   try {
@@ -52,7 +52,7 @@ export const getUserWorkoutHistory = async (req, res) => {
     const { limit = 10, skip = 0 } = req.query;
 
     const workouts = await Workout.find({ userId })
-      .populate('exerciseId', 'name category difficulty')
+      .populate('exerciseId', 'name category difficulty reps duration image video instructions tips')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip));
@@ -81,14 +81,30 @@ export const getUserWorkoutStats = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const totalWorkouts = await Workout.countDocuments({ userId, completed: true });
+    const totalWorkouts = await Workout.countDocuments({
+      userId,
+      completed: true
+    });
 
     const workoutData = await Workout.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId), completed: true } },
-      { $group: { _id: null, totalDuration: { $sum: '$duration' } } },
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          completed: true
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalDuration: { $sum: '$duration' }
+        }
+      },
     ]);
 
     const totalDuration = workoutData[0]?.totalDuration || 0;
+    const totalMinutes = Math.floor(totalDuration / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -97,10 +113,13 @@ export const getUserWorkoutStats = async (req, res) => {
     let checkDate = new Date(today);
 
     for (let i = 0; i < 365; i++) {
+      const startOfDay = new Date(checkDate);
+      const endOfDay = new Date(checkDate.getTime() + 24 * 60 * 60 * 1000);
+
       const workoutsOnDate = await Workout.countDocuments({
         userId,
         completed: true,
-        createdAt: { $gte: checkDate, $lt: new Date(checkDate.getTime() + 24 * 60 * 60 * 1000) },
+        createdAt: { $gte: startOfDay, $lt: endOfDay },
       });
 
       if (workoutsOnDate > 0) {
@@ -111,13 +130,16 @@ export const getUserWorkoutStats = async (req, res) => {
       }
     }
 
-    const uniqueExercises = await Workout.distinct('exerciseId', { userId, completed: true });
+    const uniqueExercises = await Workout.distinct('exerciseId', {
+      userId,
+      completed: true
+    });
 
     res.status(200).json({
       success: true,
       data: {
         totalWorkouts,
-        totalDuration: Math.floor(totalDuration / 60),
+        totalDuration: `${hours}h ${minutes}m`,
         currentStreak: streak,
         uniqueExercisesDone: uniqueExercises.length,
       },
@@ -150,7 +172,7 @@ export const getWorkoutsByDateRange = async (req, res) => {
         $lte: new Date(endDate),
       },
     })
-      .populate('exerciseId', 'name category')
+      .populate('exerciseId', 'name category difficulty reps duration image video instructions tips')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -173,10 +195,24 @@ export const getMostDoneExercises = async (req, res) => {
     const { limit = 5 } = req.query;
 
     const mostDone = await Workout.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId(userId), completed: true } },
-      { $group: { _id: '$exerciseId', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: parseInt(limit) },
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          completed: true
+        }
+      },
+      {
+        $group: {
+          _id: '$exerciseId',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { count: -1 }
+      },
+      {
+        $limit: parseInt(limit)
+      },
       {
         $lookup: {
           from: 'exercises',
