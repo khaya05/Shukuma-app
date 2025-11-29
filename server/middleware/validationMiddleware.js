@@ -21,10 +21,6 @@ export const validateRegisterUser = handleValidationErrors([
     .notEmpty()
     .withMessage('name is required'),
 
-  body('lastName')
-    .notEmpty()
-    .withMessage('last name is required'),
-
   body('email')
     .notEmpty()
     .withMessage('email is required')
@@ -67,10 +63,6 @@ export const validateUpdateUserInput = handleValidationErrors([
   body('name')
     .notEmpty()
     .withMessage('name is required'),
-
-  body('lastName')
-    .notEmpty()
-    .withMessage('last name is required'),
 
   body('email')
     .notEmpty()

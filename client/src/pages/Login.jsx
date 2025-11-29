@@ -9,12 +9,21 @@ export const LoginAction = async ({ request }) => {
   const data = Object.fromEntries(formData);
 
   try {
-    const response = await customFetch.post('/auth/login', data);
+    const response = await customFetch.post('/api/v1/auth/login', data);
     localStorage.setItem('token', response?.data?.token);
 
     toastService.success('Logged in successfully');
     return redirect('/dashboard');
   } catch (error) {
+    if (error?.response?.status === 403) {
+      localStorage.setItem(
+        'pendingVerificationEmail',
+        error?.response?.data?.email
+      );
+      toastService.error(error?.response?.data?.message);
+      return redirect('/verify-email');
+    }
+
     toastService.error(error?.response?.data?.msg || 'Login failed.');
     return { error: error?.response?.data?.msg };
   }

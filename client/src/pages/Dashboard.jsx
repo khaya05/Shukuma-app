@@ -1,9 +1,24 @@
 import { FaClipboard } from 'react-icons/fa';
 import { GrAchievement } from 'react-icons/gr';
 import { TbTargetArrow } from 'react-icons/tb';
-import { Link } from 'react-router-dom';
+import { Link, useLoaderData } from 'react-router-dom';
+import { toastService } from '../util/toastUtil';
+import axios from 'axios';
+
+export const dashboardLoader = async () => {
+  try {
+    const data = await axios.get('api/v1/workouts/stats');
+    console.log({ data });
+    return data;
+  } catch (error) {
+    toastService.error(error?.response?.data?.msg || 'Failed to fetch data.');
+    return { error: error?.response?.data?.msg };
+  }
+};
 
 export default function Dashboard() {
+  const data = useLoaderData();
+  console.log(data);
   const stats = [
     { label: 'Total Workouts', value: '12' },
     { label: 'Day Streak', value: '5' },

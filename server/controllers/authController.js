@@ -8,7 +8,7 @@ import {
 } from '../util/passwordUtil.js';
 import { UnauthenticatedError } from '../errors/customErrors.js';
 import { createToken } from '../util/tokenUtils.js';
-import { sendVerificationEmail } from '../services/emailService.js';
+import { sendVerificationEmail, sendWelcomeEmail } from '../services/emailService.js';
 
 export const register = asyncWrapper(async (req, res) => {
   const hashedPassword = await hashPassword(req.body.password);
@@ -23,7 +23,7 @@ export const register = asyncWrapper(async (req, res) => {
   });
 
   try {
-    await sendVerificationEmail(email, verificationCode);
+    await sendVerificationEmail(req.body.email, verificationCode);
   } catch (error) {
     console.error('Failed to send verification email', error);
   }
@@ -50,7 +50,7 @@ export const register = asyncWrapper(async (req, res) => {
 });
 
 export const verifyEmail = asyncWrapper(async (req, res) => {
-  const { email, body } = req.body;
+  const { email, code } = req.body;
 
   if (!email || !code) {
     return res
@@ -81,7 +81,7 @@ export const verifyEmail = asyncWrapper(async (req, res) => {
   if (user.verificationCode !== code) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: 'invalid verification code' });
+      .json({ message: 'Invalid verification code' });
   }
 
   user.emailVerified = true;
@@ -89,6 +89,12 @@ export const verifyEmail = asyncWrapper(async (req, res) => {
   user.verificationCodeExpires = undefined;
 
   await user.save();
+
+  try {
+    await sendWelcomeEmail(user.email, user.name);
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+  }
 
   res.status(200).json({
     success: true,
@@ -144,14 +150,14 @@ export const resendVerificationCode = asyncWrapper(async (req, res) => {
 
 export const login = asyncWrapper(async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select('+password');
 
-  const isValidUser = user && (await comparePassword(password, user.password));
-
-  if (!isValidUser) throw new UnauthenticatedError('invalid credentials');
+  if (!user || !(await comparePassword(password, user.password))) {
+    throw new UnauthenticatedError('invalid credentials');
+  }
 
   if (!user.emailVerified) {
-    return res.status(StatusCodes.UNAUTHORIZED).json({
+    return res.status(StatusCodes.FORBIDDEN).json({
       message: 'Please verify your email first',
       requiresVerification: true,
       email: user.email,
@@ -185,28 +191,42 @@ export const googleAuth = asyncWrapper(async (req, res) => {
   const { googleId, name, email } = req.body;
 
   if (!googleId || !email || !name) {
-    return res.status(400).json({ message: 'Missing required Google data' });
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: 'Missing required Google data (googleId, name, email)',
+    });
   }
 
-  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+  let user = await User.findOne({
+    $or: [{ googleId }, { email }],
+  });
 
   if (user) {
     if (!user.googleId) {
       user.googleId = googleId;
+      user.emailVerified = true;
       await user.save();
     }
   } else {
-    user = new User({
+    user = await User.create({
       name,
       email,
       googleId,
       emailVerified: true,
       authProvider: 'google',
     });
-    await user.save();
   }
+
   const token = createToken({ userId: user._id, role: user.role });
-  res.status(200).json({
+
+  const oneDay = 1000 * 60 * 60 * 24;
+  res.cookie('token', token, {
+    httpOnly: true,
+    expires: new Date(Date.now() + oneDay),
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  });
+
+  res.status(StatusCodes.OK).json({
     success: true,
     message: 'Google authentication successful',
     token,
@@ -214,8 +234,8 @@ export const googleAuth = asyncWrapper(async (req, res) => {
       userId: user._id,
       name: user.name,
       email: user.email,
-      avatar: user.avatar,
       emailVerified: user.emailVerified,
+      authProvider: user.authProvider,
     },
   });
 });
@@ -226,4 +246,4 @@ export const logout = (req, res) => {
     expires: new Date(Date.now()),
   });
   res.status(StatusCodes.OK).json({ msg: 'user logged out!' });
-};
+}

@@ -6,13 +6,21 @@ import { Logo } from '../components';
 
 export default function VerifyEmail() {
   const [code, setCode] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(
+    () => localStorage.getItem('pendingVerificationEmail') || ''
+  );
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
 
   const handleVerify = async (e) => {
     e.preventDefault();
+
+    if (!email || !code) {
+      toastService.error('Please enter email and verification code');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -21,11 +29,14 @@ export default function VerifyEmail() {
         code,
       });
 
+      localStorage.removeItem('pendingVerificationEmail');
       toastService.success('Email verified successfully!');
       navigate('/dashboard');
     } catch (error) {
       toastService.error(
-        error?.response?.data?.message || 'Verification failed'
+        error?.response?.data?.message ||
+          error?.response?.data?.msg ||
+          'Verification failed'
       );
     } finally {
       setLoading(false);
@@ -44,7 +55,9 @@ export default function VerifyEmail() {
       toastService.success('Verification code sent to your email');
     } catch (error) {
       toastService.error(
-        error?.response?.data?.message || 'Failed to resend code'
+        error?.response?.data?.message ||
+          error?.response?.data?.msg ||
+          'Failed to resend code'
       );
     } finally {
       setResending(false);
@@ -55,7 +68,9 @@ export default function VerifyEmail() {
     <div className='grid place-items-center h-[100vh] bg-gray-50'>
       <div className='bg-white rounded-lg shadow-lg p-8 w-full max-w-md'>
         <div className='text-center mb-6'>
-          <Logo />
+          <div className='w-fit mx-auto'>
+            <Logo />
+          </div>
           <h2 className='text-2xl font-bold mt-4 mb-2'>Verify Your Email</h2>
           <p className='text-gray-600'>
             Enter the 6-digit code we sent to your email

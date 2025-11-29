@@ -20,7 +20,7 @@ const DashboardContext = createContext();
 
 export const dashboardLoader = async () => {
   try {
-    const { data } = await customFetch('/users/current-user');
+    const { data } = await customFetch('/api/v1/users/current-user');
     if (!data) {
       return redirect('/');
     }

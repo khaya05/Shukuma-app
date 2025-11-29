@@ -1,5 +1,6 @@
 import Workout from '../models/workoutModel.js';
 import Exercise from '../models/exerciseModel.js'
+import mongoose from 'mongoose'
 
 export const logWorkout = async (req, res) => {
   try {
@@ -83,7 +84,7 @@ export const getUserWorkoutStats = async (req, res) => {
     const totalWorkouts = await Workout.countDocuments({ userId, completed: true });
 
     const workoutData = await Workout.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId(userId), completed: true } },
+      { $match: { userId: new mongoose.Types.ObjectId(userId), completed: true } },
       { $group: { _id: null, totalDuration: { $sum: '$duration' } } },
     ]);
 
