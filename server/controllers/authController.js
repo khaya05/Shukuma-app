@@ -108,6 +108,27 @@ export const verifyEmail = asyncWrapper(async (req, res) => {
   });
 });
 
+export const authenticateUser = (req, res, next) => {
+  let token = req.cookies.token;
+
+  if (!token) {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+
+  if (!token) throw new UnauthenticatedError('authentication invalid');
+
+  try {
+    const { userId } = verifyJWT(token);
+    req.userId = userId; 
+    next();
+  } catch (error) {
+    throw new UnauthenticatedError('authentication invalid');
+  }
+};
+
 export const resendVerificationCode = asyncWrapper(async (req, res) => {
   const { email } = req.body;
 

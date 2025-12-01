@@ -7,7 +7,6 @@ export const Sidebar = ({ onLogout }) => {
 
   return (
     <aside className='fixed left-0 top-0 w-[280px] h-screen bg-black text-white overflow-y-auto z-100 shadow-lg'>
-      {/* Logo */}
       <div className='px-6 py-8 border-b border-yellow-500 border-opacity-30'>
         <h1 className='text-2xl font-bold text-yellow-500 tracking-widest'>
           🃏 SHUKUMA
@@ -17,7 +16,6 @@ export const Sidebar = ({ onLogout }) => {
         </p>
       </div>
 
-      {/* Main Navigation */}
       <nav className='py-6'>
         <Link
           to='/dashboard'
@@ -60,7 +58,6 @@ export const Sidebar = ({ onLogout }) => {
         </Link>
       </nav>
 
-      {/* Settings Section */}
       <div className='mt-8 pt-6 border-t border-yellow-500 border-opacity-20'>
         <p className='px-6 text-xs uppercase text-gray-600 tracking-widest font-semibold mb-4'>
           Settings
@@ -81,7 +78,6 @@ export const Sidebar = ({ onLogout }) => {
         </Link>
       </div>
 
-      {/* Footer */}
       <div className='absolute bottom-0 w-full p-6 border-t border-yellow-500 border-opacity-20 bg-gray-950'>
         <button
           onClick={onLogout}

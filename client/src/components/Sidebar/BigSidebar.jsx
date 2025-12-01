@@ -1,4 +1,4 @@
-import { Logo, SidebarPages } from '..';
+import { SidebarPages } from '..';
 import { useDashboardContext } from '../../pages/DashboardLayout';
 import { FaEyeSlash } from 'react-icons/fa';
 import LogoutBtn from '../Buttons/LogoutBtn';

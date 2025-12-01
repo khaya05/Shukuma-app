@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Logo, FormInputElement, GoogleSignInButton } from '../components';
 import customFetch from '../util/customFetch';
 import { redirect, Form, Link, useNavigate } from 'react-router-dom';

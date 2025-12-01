@@ -37,7 +37,6 @@ const WorkoutCard = ({ exercise, onComplete, onSkip, loading }) => {
           </div>
 
           <div className='card-face card-back w-full h-full flex flex-col items-start justify-start text-white p-6 overflow-y-auto bg-gray-950'>
-            {/* Exercise Image */}
             {exercise.image && (
               <div className='w-full mb-4 rounded-lg overflow-hidden bg-gray-900 flex items-center justify-center h-40'>
                 <img

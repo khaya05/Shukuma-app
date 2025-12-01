@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateUser } from '../middleware/authMiddleware.js'; // ✅ ADD THIS IMPORT
 import {
   logWorkout,
   getUserWorkoutHistory,
@@ -8,6 +9,8 @@ import {
 } from '../controllers/workoutController.js';
 
 const router = express.Router();
+
+router.use(authenticateUser);
 
 router.post('/', logWorkout);
 router.get('/history', getUserWorkoutHistory);

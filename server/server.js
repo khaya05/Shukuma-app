@@ -16,8 +16,6 @@ import exerciseRoutes from './routes/exerciseRoutes.js';
 import workoutRoutes from './routes/workoutRoutes.js';
 import errorHandlerMiddleware from './middleware/errorHandlerMiddleware.js';
 import { authenticateUser } from './middleware/authMiddleware.js';
-import { BadRequestError, UnauthenticatedError } from './errors/customErrors.js';
-import { verifyJWT } from './util/tokenUtils.js';
 
 // middleware
 app.use(express.json());
@@ -26,65 +24,10 @@ app.use(cookieParser());
 const port = process.env.PORT || 5100;
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: 'https://footprint-logger-03-frontend.onrender.com',
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    credentials: true,
-  },
-});
-
-io.use((socket, next) => {
-  try {
-    const cookies = socket.handshake.headers.cookie
-    if (!cookies) next(new BadRequestError('No cookies found'))
-
-    const req = {
-      headers: {
-        cookie: cookies
-      }
-    }
-    const parsedCookies = {}
-    cookieParser()(
-      { headers: { cookie: cookies } },
-      { cookie: (name, value) => parsedCookies[name] = value },
-      () => { }
-    );
-
-    const token = req.cookies?.token || parsedCookies.token
-
-    if (!token) next(new UnauthenticatedError('no token found'))
-
-    const decoded = verifyJWT(token)
-    socket.userId = decoded.userId
-    next()
-  } catch (err) {
-    console.error("Socket authentication error:", err);
-    next(new Error("Authentication error"));
-  }
-})
-
-io.on('connection', (socket) => {
-  console.log('User connected', socket.id);
-
-  socket.join(socket.userId);
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected', socket.id);
-  });
-});
-
-app.set('io', io);
-
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
-
 // CORS
 const allowedOrigins = [
   'http://localhost:5173',
-  // 'https://footprint-logger-03-frontend.onrender.com'
+  'https://shukuma-app-client.onrender.com'
 ];
 
 app.use(cors({
@@ -104,7 +47,7 @@ app.use(cors({
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/exercises', exerciseRoutes);
 app.use('/api/v1/users', authenticateUser, userRouter);
-app.use('/api/v1/workouts', authenticateUser, workoutRoutes);
+app.use('/api/v1/workouts', workoutRoutes);
 
 app.use('*', (req, res) => {
   res.status(404).json({ msg: 'Route not found' });

@@ -34,7 +34,7 @@ export const sendVerificationEmail = async (email, verificationCode) => {
           </p>
           <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 40px 0;">
           <p style="color: #999; font-size: 12px; margin: 0;">
-            © 2024 Shukuma. All rights reserved.
+            © 2025 Shukuma. All rights reserved.
           </p>
         </div>
       </div>
@@ -77,7 +77,7 @@ export const sendWelcomeEmail = async (email, userName) => {
             Start shuffling the deck and pick your first exercise. Whether it's cardio, strength training, or flexibility work, we've got you covered with our unique card-based workout system.
           </p>
           <div style="background: white; border-left: 4px solid #eab308; padding: 20px; margin: 30px 0; border-radius: 4px;">
-            <h3 style="color: #1a1a1a; margin-top: 0;">🚀 Get Started:</h3>
+            <h3 style="color: #1a1a1a; margin-top: 0;"> Get Started:</h3>
             <ul style="color: #666; line-height: 1.8;">
               <li>Shuffle the deck to get a random exercise</li>
               <li>Follow the step-by-step instructions</li>
@@ -86,7 +86,7 @@ export const sendWelcomeEmail = async (email, userName) => {
             </ul>
           </div>
           <p style="color: #999; font-size: 12px; margin-top: 40px; border-top: 1px solid #e0e0e0; padding-top: 20px;">
-            © 2024 Shukuma. All rights reserved.
+            © 2025 Shukuma. All rights reserved.
           </p>
         </div>
       </div>

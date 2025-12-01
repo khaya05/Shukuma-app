@@ -1,3 +1,4 @@
+
 import Exercise from '../models/exerciseModel.js';
 import { asyncWrapper } from '../util/asyncWrapper.js';
 
@@ -10,204 +11,147 @@ export const getAllExercises = asyncWrapper(async (req, res) => {
   });
 });
 
-export const getExerciseById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const exercise = await Exercise.findById(id);
+export const getExerciseById = asyncWrapper(async (req, res) => {
+  const { id } = req.params;
+  const exercise = await Exercise.findById(id);
 
-    if (!exercise) {
-      return res.status(404).json({
-        success: false,
-        message: 'Exercise not found',
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      data: exercise,
-    });
-  } catch (error) {
-    res.status(500).json({
+  if (!exercise) {
+    return res.status(404).json({
       success: false,
-      message: 'Error fetching exercise',
-      error: error.message,
+      message: 'Exercise not found',
     });
   }
-};
 
-export const getRandomExercise = async (req, res) => {
-  try {
-    const count = await Exercise.countDocuments();
+  res.status(200).json({
+    success: true,
+    data: exercise,
+  });
+});
 
-    if (count === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No exercises available',
-      });
-    }
+export const getRandomExercise = asyncWrapper(async (req, res) => {
+  const count = await Exercise.countDocuments();
 
-    const randomIndex = Math.floor(Math.random() * count);
-    const exercise = await Exercise.findOne().skip(randomIndex);
-
-    res.status(200).json(exercise);
-  } catch (error) {
-    res.status(500).json({
+  if (count === 0) {
+    return res.status(404).json({
       success: false,
-      message: 'Error fetching random exercise',
-      error: error.message,
+      message: 'No exercises available',
     });
   }
-};
 
-export const getExercisesByCategory = async (req, res) => {
-  try {
-    const { category } = req.params;
-    const exercises = await Exercise.find({ category });
+  const randomIndex = Math.floor(Math.random() * count);
+  const exercise = await Exercise.findOne().skip(randomIndex);
 
-    if (exercises.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No exercises found in category: ${category}`,
-      });
-    }
+  res.status(200).json(exercise);
+});
 
-    res.status(200).json({
-      success: true,
-      count: exercises.length,
-      data: exercises,
-    });
-  } catch (error) {
-    res.status(500).json({
+export const getExercisesByCategory = asyncWrapper(async (req, res) => {
+  const { category } = req.params;
+  const exercises = await Exercise.find({ category });
+
+  if (exercises.length === 0) {
+    return res.status(404).json({
       success: false,
-      message: 'Error fetching exercises by category',
-      error: error.message,
+      message: `No exercises found in category: ${category}`,
     });
   }
-};
 
-export const getExercisesByDifficulty = async (req, res) => {
-  try {
-    const { difficulty } = req.params;
-    const exercises = await Exercise.find({ difficulty });
+  res.status(200).json({
+    success: true,
+    count: exercises.length,
+    data: exercises,
+  });
+});
 
-    if (exercises.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `No exercises found with difficulty: ${difficulty}`,
-      });
-    }
+export const getExercisesByDifficulty = asyncWrapper(async (req, res) => {
+  const { difficulty } = req.params;
+  const exercises = await Exercise.find({ difficulty });
 
-    res.status(200).json({
-      success: true,
-      count: exercises.length,
-      data: exercises,
-    });
-  } catch (error) {
-    res.status(500).json({
+  if (exercises.length === 0) {
+    return res.status(404).json({
       success: false,
-      message: 'Error fetching exercises by difficulty',
-      error: error.message,
+      message: `No exercises found with difficulty: ${difficulty}`,
     });
   }
-};
 
-export const createExercise = async (req, res) => {
-  try {
-    const { name, reps, difficulty, duration, category, instructions, tips, image, equipment } = req.body;
+  res.status(200).json({
+    success: true,
+    count: exercises.length,
+    data: exercises,
+  });
+});
 
-    if (!name || !reps || !duration || !category || !instructions) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide all required fields',
-      });
-    }
+export const createExercise = asyncWrapper(async (req, res) => {
+  const { name, reps, difficulty, duration, category, instructions, tips, image, equipment, video } = req.body;
 
-    const existingExercise = await Exercise.findOne({ name });
-    if (existingExercise) {
-      return res.status(400).json({
-        success: false,
-        message: 'Exercise already exists',
-      });
-    }
-
-    const exercise = new Exercise({
-      name,
-      reps,
-      difficulty,
-      duration,
-      category,
-      instructions,
-      tips,
-      image,
-      equipment,
-    });
-
-    await exercise.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Exercise created successfully',
-      data: exercise,
-    });
-  } catch (error) {
-    res.status(500).json({
+  if (!name || !reps || !duration || !category || !instructions) {
+    return res.status(400).json({
       success: false,
-      message: 'Error creating exercise',
-      error: error.message,
+      message: 'Please provide all required fields',
     });
   }
-};
 
-export const updateExercise = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const exercise = await Exercise.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!exercise) {
-      return res.status(404).json({
-        success: false,
-        message: 'Exercise not found',
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Exercise updated successfully',
-      data: exercise,
-    });
-  } catch (error) {
-    res.status(500).json({
+  const existingExercise = await Exercise.findOne({ name });
+  if (existingExercise) {
+    return res.status(400).json({
       success: false,
-      message: 'Error updating exercise',
-      error: error.message,
+      message: 'Exercise already exists',
     });
   }
-};
 
-export const deleteExercise = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const exercise = await Exercise.findByIdAndDelete(id);
+  const exercise = await Exercise.create({
+    name,
+    reps,
+    difficulty,
+    duration,
+    category,
+    instructions,
+    tips,
+    image,
+    equipment,
+    video,
+  });
 
-    if (!exercise) {
-      return res.status(404).json({
-        success: false,
-        message: 'Exercise not found',
-      });
-    }
+  res.status(201).json({
+    success: true,
+    message: 'Exercise created successfully',
+    data: exercise,
+  });
+});
 
-    res.status(200).json({
-      success: true,
-      message: 'Exercise deleted successfully',
-    });
-  } catch (error) {
-    res.status(500).json({
+export const updateExercise = asyncWrapper(async (req, res) => {
+  const { id } = req.params;
+  const exercise = await Exercise.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!exercise) {
+    return res.status(404).json({
       success: false,
-      message: 'Error deleting exercise',
-      error: error.message,
+      message: 'Exercise not found',
     });
   }
-}
+
+  res.status(200).json({
+    success: true,
+    message: 'Exercise updated successfully',
+    data: exercise,
+  });
+});
+
+export const deleteExercise = asyncWrapper(async (req, res) => {
+  const { id } = req.params;
+  const exercise = await Exercise.findByIdAndDelete(id);
+
+  if (!exercise) {
+    return res.status(404).json({
+      success: false,
+      message: 'Exercise not found',
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Exercise deleted successfully',
+  });
+});
